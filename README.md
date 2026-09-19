@@ -1,59 +1,67 @@
-# Customer Churn Prediction (Project - Feature Engineering)
+# Customer Churn Prediction & Class Imbalance Mitigation
 
 ## Project Overview
-Beta Bank customers are leaving every month. Because acquiring new customers is significantly more expensive than retaining existing ones, the goal of this project is to build a machine learning model to predict whether a customer will terminate their contract soon.
+Beta Bank is experiencing monthly customer churn. Because acquiring new clients is significantly more costly than retaining existing ones, the objective of this project is to build a high-performance binary classification model to predict whether a customer will terminate their contract soon.
 
-The primary requirement for this project is achieving an **F1 score of at least 0.59** on the unseen test dataset. Additionally, the **AUC-ROC** metric is evaluated to measure overall class discrimination performance.
+To meet the project criteria, the target model must achieve an **F1 score $\ge$ 0.59** on the unseen test dataset. Additionally, the **AUC-ROC** metric is evaluated across model iterations to gauge overall class discrimination capability.
 
 ---
 
-## Technical Highlights & Methodologies
+## Technical Highlights & Evaluation Criteria
 
-* **Data Leakage Prevention:** Implemented a strict 60% Train / 20% Validation / 20% Test stratified split *before* performing any feature transformations. Imputation (median), One-Hot Encoding (`drop='first'`), and Feature Scaling (`StandardScaler`) were fitted strictly on `X_train` and applied downstream.
-* **Exploratory Data Analysis (EDA):** Scoped missing values in `tenure` (909 missing rows, ~9.09% of the dataset) and justified median imputation using tenure distribution plots across churned vs. retained customers.
-* **Class Imbalance Mitigation:** Handled the 4:1 class imbalance (~80% retained vs. ~20% churned) by evaluating Class Weighting (`class_weight='balanced'`), Upsampling, and Downsampling techniques across Random Forest models.
-* **Threshold Tuning:** Applied probability decision threshold optimization on the validation set to maximize Recall and precision, successfully pushing the test F1 score past the project threshold.
-* **Legacy Environment Safety:** Wrote version-safe preprocessing code compatible with older `scikit-learn` releases (resolving `get_feature_names_out` and `handle_unknown` deprecation errors).
+* **Data Preprocessing & Data Leakage Prevention:**
+  * Dropped irrelevant identifier features (`RowNumber`, `CustomerId`, `Surname`) to prevent model overfitting.
+  * Extracted features and target (`Exited`), followed by a strict **60% Train / 20% Validation / 20% Test** stratified split executed *before* any feature transformations.
+  * Imputed missing values in `Tenure` (~9.09% missing) using training set medians, performed One-Hot Encoding (`drop='first'`) on categorical variables (`Geography`, `Gender`), and scaled numeric features via `StandardScaler` fitted strictly on `X_train`.
+* **Class Imbalance Investigation:**
+  * Identified a ~4:1 class imbalance (~80% retained vs. ~20% churned).
+  * Evaluated baseline models (Decision Tree & Random Forest) without handling class imbalance to establish benchmark performance.
+* **Imbalance Handling & Tuning (2+ Approaches):**
+  * Evaluated **Class Weighting** (`class_weight='balanced'`).
+  * Implemented **Upsampling** (oversampling the minority churn class) and **Downsampling**.
+  * Optimized decision probability thresholds on the validation set to maximize precision and recall balance.
+* **Final Model Selection & Testing:**
+  * Hyperparameter tuning across tree depth and estimators identified the tuned `RandomForestClassifier` as the optimal model.
+  * Final evaluation conducted on the isolated test set to confirm threshold criteria compliance.
 
 ---
 
 ## Dataset Overview
 
-The dataset (`/datasets/Churn.csv`) contains historical data on client behavior and contract termination:
+Dataset source: `/datasets/Churn.csv`
 
 | Feature | Type | Description |
 | :--- | :--- | :--- |
-| `CreditScore` | Quantitative | Customer's credit score |
+| `CreditScore` | Quantitative | Customer credit score |
 | `Geography` | Categorical | Country of residence (France, Spain, Germany) |
-| `Gender` | Categorical | Male or Female |
-| `Age` | Quantitative | Customer's age in years |
+| `Gender` | Categorical | Gender |
+| `Age` | Quantitative | Customer age in years |
 | `Tenure` | Quantitative | Years as a bank client (Contains ~9.09% missing values) |
 | `Balance` | Quantitative | Account balance |
 | `NumOfProducts` | Quantitative | Number of banking products used |
-| `HasCrCard` | Binary | Customer holds a credit card (1 = Yes, 0 = No) |
+| `HasCrCard` | Binary | Credit card holder status (1 = Yes, 0 = No) |
 | `IsActiveMember` | Binary | Active membership status (1 = Yes, 0 = No) |
-| `EstimatedSalary`| Quantitative | Estimated annual salary |
+| `EstimatedSalary` | Quantitative | Estimated annual salary |
 | **`Exited`** *(Target)* | Binary | Customer churn status (1 = Churned, 0 = Retained) |
-
-*Note: Identifier features (`RowNumber`, `CustomerId`, `Surname`) were dropped prior to model training to prevent overfitting.*
 
 ---
 
-## Key Results & Metrics
+## Key Model Results & Metrics
 
-| Model Stage | Validation F1 Score | Test F1 Score | Test AUC-ROC |
+| Model Approach | Validation F1 Score | Test F1 Score | Test AUC-ROC |
 | :--- | :---: | :---: | :---: |
 | **Baseline Decision Tree** (Unbalanced) | 0.4871 | — | — |
-| **Random Forest + Threshold Tuning** | **0.6120** | **0.6073** | **0.8542** |
+| **Random Forest** (Balanced / Upsampled) | 0.5890 | — | — |
+| **Random Forest + Threshold Optimization** | **0.6120** | **0.6073** | **0.8542** |
 
-> **Final Outcome:** The tuned `RandomForestClassifier` with threshold optimization achieved a **Test F1 Score of 0.6073** (exceeding the 0.59 requirement) and a **Test AUC-ROC Score of 0.8542**.
+> **Final Outcome:** The tuned Random Forest model achieved a **Test F1 Score of 0.6073** (exceeding the 0.59 project requirement) and an **AUC-ROC Score of 0.8542**, demonstrating robust class separation and predictive performance on unseen data.
 
 ---
 
 ## Project Structure
 
 ```text
-├── main.ipynb            # Clean 10-cell Jupyter notebook (Data Prep -> Modeling -> Evaluation)
+├── main.ipynb            # Jupyter notebook with complete data prep, imbalance experiments, and test evaluation
 ├── README.md             # Project documentation and summary
 └── /datasets/
-    └── Churn.csv         # Bank customer churn dataset
+    └── Churn.csv         # Beta Bank customer dataset
