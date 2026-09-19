@@ -1,4 +1,3 @@
-# Project---Feature-Engineering
 # Customer Churn Prediction (Project - Feature Engineering)
 
 ## Project Overview
